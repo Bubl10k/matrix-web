@@ -39,9 +39,14 @@
         },
         {
             "name": "rest_framework",
-            "depth": 3,
+            "depth": 4,
             "includeAllSymbols": true
-        }
+        },
+        {
+            "name": "djang-filter",
+            "depth": 4,
+            "includeAllSymbols": true
+        },
     ],
 
     "[python]": {
@@ -58,6 +63,6 @@
         "--disable=E0401",
         "--disable=C0200",
         "--disable=W0613",
-        "--disable=E1101"
+        "--disable=E1101",
     ],
 }
