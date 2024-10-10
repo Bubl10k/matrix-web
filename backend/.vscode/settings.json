@@ -47,6 +47,11 @@
             "depth": 4,
             "includeAllSymbols": true
         },
+        {
+            "name": "celery",
+            "depth": 3,
+            "includeAllSymbols": true
+        }
     ],
 
     "[python]": {

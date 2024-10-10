@@ -8,12 +8,19 @@ const apiClient = axios.create({
 });
 
 
-export const sendDataToBackend = async (matrix, vector) => {
+export const sendDataToBackend = async (matrix, vector, setProgress) => {
     try {
         const response = await apiClient.post('solve/', {
-            matrix: matrix,
-            vector: vector
-        });
+                matrix: matrix,
+                vector: vector
+            },
+            {
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    setProgress(percentCompleted);
+                }
+            }
+        );
         return response
     } catch (err) {
         console.error('Error sending matrix to backend:', err);

@@ -1,15 +1,19 @@
-import { Box, Button, Container, Typography } from '@mui/material'
+import { Box, Button, Container, LinearProgress, Typography } from '@mui/material'
 import '../index.css';
 import { useRef, useState } from 'react';
 import MySelect from '../components/UI/MySelect.jsx';
 import EquationForm from '../components/EquationForm.jsx';
 import { sendDataToBackend } from '../services/api.js';
+import ResultModal from '../components/ResultModal.jsx';
 
 export default function Matrix() {
   const [numEquation, setNumEquation] = useState(2);
   const [matrix, setMatrix] = useState(Array(numEquation).fill(Array(numEquation).fill(0)));
   const [vector, setVector] = useState(Array(numEquation).fill(0));
   const [result, setResult] = useState([]);
+  const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleChange = (event) => {
@@ -29,12 +33,15 @@ export default function Matrix() {
   };
 
   const handleCalculate = async () => {
-    console.log(matrix);
+    setLoading(true);
     try {
-      const response = await sendDataToBackend(matrix, vector);
-      console.log(response);
+      const response = await sendDataToBackend(matrix, vector, setProgress);
+      setResult(response.data.result);
+      setOpen(true);
     } catch (err) {
       console.error('Error sending matrix to backend:', err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -58,6 +65,10 @@ export default function Matrix() {
     };
     reader.readAsText(file);
   };
+
+  const handleClose = () => {
+    setOpen(false);
+  }
 
   return (
     <Container maxWidth="xl">
@@ -126,6 +137,7 @@ export default function Matrix() {
             onChange={handleFileUpload}
           />
         </Box>
+        {loading && <LinearProgress variant="determinate" value={progress} sx={{ marginTop: '20px' }} />}
         <EquationForm
           matrix={matrix}
           setMatrix={setMatrix}
@@ -144,11 +156,17 @@ export default function Matrix() {
             sx={{
               marginTop: '50px',
             }}
+            disabled={loading}
             onClick={handleCalculate}
           >
             Calculate
           </Button>
         </Box>
+        <ResultModal
+          result={result}
+          open={open}
+          handleClose={handleClose}
+        />
     </Container>
   )
 }
