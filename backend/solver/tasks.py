@@ -1,12 +1,14 @@
 from django.shortcuts import get_object_or_404
-from history.models import History
 from celery import shared_task
 import numpy as np
 
+from .models import Task
+
+
 @shared_task
-def solve(task_id):
+def solve_linear_system(task_id):
     try:
-        task = get_object_or_404(History, pk=task_id)
+        task = get_object_or_404(Task, pk=task_id)
         task.status = 'P'
         task.save()
         
@@ -17,7 +19,7 @@ def solve(task_id):
         task.result = result.tolist()
         task.status = 'A'
         task.save()
-        return result.tolist()
+        return task.id
     except np.linalg.LinAlgError as e:
         task.status = 'F'
         task.save()

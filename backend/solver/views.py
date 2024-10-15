@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -5,79 +6,63 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
-from celery.result import AsyncResult
 
-from history.models import History
-from .tasks import solve
+from .tasks import solve_linear_system
+
+from .serializers import TaskSerializer
+
+from .models import Task
 
 
-class TaskViewSet(viewsets.ViewSet):
-    queryset = History.objects.all()
+class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    serializer_class = TaskSerializer
+    queryset = Task.objects.all()
     
     def get_queryset(self):
-        return History.objects.filter(user=self.request.user)
+        return Task.objects.filter(user=self.request.user)
     
-    def create(self, request, *args, **kwargs):
-        matrix = request.data.get('matrix', [])
-        vector = request.data.get('vector', [])
-
-        if History.objects.filter(user=request.user).count() >= settings.MAX_TASKS_PER_USER:
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        queryset = self.get_queryset()
+        if queryset.count() >= settings.MAX_TASKS_PER_USER:
             return Response({'error': 'Task limit reached'}, status=HTTP_400_BAD_REQUEST)
-
-        # Валідація
-        if not matrix or not vector or len(matrix) != len(vector):
-            return Response({'error': 'Invalid input'}, status=HTTP_400_BAD_REQUEST)
-        if len(matrix) != len(matrix[0]):
-            return Response({'error': 'Matrix must be square'}, status=HTTP_400_BAD_REQUEST)
-
-        task = History.objects.create(
-            user=request.user,
-            matrix=matrix,
-            vector=vector,
-            status='pending'
-        )
-
-        task_id = solve.delay(task.id)
-        task.task_id = task_id
+        
+        task = serializer.save(user=request.user)
+        
+        # async worker
+        async_result = solve_linear_system.delay(task.id)
+        task.task_id = async_result.id
         task.save()
         
-    @action(detail=True, methods=['GET'])
-    def status(self, request, pk=None):
-        task = get_object_or_404(History, pk=pk, user=request.user)
-        result = AsyncResult(task.task_id)
-
-        return Response({
-            'id': task.id,
-            'status': task.status,
-            'result': task.result,
-            'celery_status': result.status
-        })
-        
-    @action(detail=True, methods=['POST'])
-    def cancel(self, request, pk=None):
-        task = get_object_or_404(History, pk=pk, user=request.user)
-        result = AsyncResult(task.task_id)
-        result.revoke(terminate=True)
-        task.status = 'cancelled'
-        task.save()
-
-        return Response({'message': 'Task cancelled'})
+        return Response({'message': 'Task created', 'task_id': task.id})
     
-    @action(detail=False, methods=['GET'])
-    def history(self, request):
-        tasks = History.objects.filter(user=request.user)
-        task_list = [
-            {
-                'id': task.id,
-                'matrix': task.matrix,
-                'vector': task.vector,
-                'status': task.status,
-                'result': task.result,
-                'created_at': task.created_at,
-                'updated_at': task.updated_at
-            }
-            for task in tasks
-        ]
-        return Response({'tasks': task_list})
+    @action(methods=['get'], detail=True)
+    def status(self, request, pk=None):
+        task = get_object_or_404(Task, pk=pk)
+        result = AsyncResult(task.task_id)
+        serializer = self.get_serializer(task)
+        data = serializer.data
+        data.update({'celery_status': result.status})
+        
+        return Response(data)
+    
+    @action(methods=['get'], detail=True)
+    def result(self, request, pk=None):
+        task = get_object_or_404(Task, pk=pk)
+        serializer = self.get_serializer(task)
+        
+        return Response(serializer.data)
+    
+    @action(methods=['put'], detail=True)
+    def cancel(self, request):
+        task = request.data.get('task_id')
+        result = AsyncResult(task)
+        result.revoke(terminate=True)
+        task.status = 'C'
+        task.save()
+        serializer = self.get_serializer(task)
+                
+        return Response(serializer.data)
     

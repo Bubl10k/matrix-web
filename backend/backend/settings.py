@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     
     'solver',
     'custom_auth',
-    'history',
 ]
 
 MIDDLEWARE = [
@@ -151,7 +150,7 @@ REST_FRAMEWORK = {
     ]
 }
 
-# JWT tokens
+# JWT strategy 
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -198,7 +197,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 COUNT_OF_UNKNOWNS = 5000
-MAX_TASKS_PER_USER = 10
+MAX_TASKS_PER_USER = 1000
 
 # CELERY
 
