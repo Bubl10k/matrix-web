@@ -1,20 +1,23 @@
-import { Box, Button, Container, LinearProgress, Typography } from '@mui/material'
+import { Box, Button, Container, TextField, Typography } from '@mui/material'
 import '../index.css';
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import MySelect from '../components/UI/MySelect.jsx';
 import EquationForm from '../components/EquationForm.jsx';
-import { sendDataToBackend } from '../services/api.js';
+import { ApiService } from '../services/api.js';
 import ResultModal from '../components/ResultModal.jsx';
+import AuthContext from '../context/AuthProvider.jsx';
 
 export default function Matrix() {
+  const { authTokens, logoutUser } = useContext(AuthContext);
   const [numEquation, setNumEquation] = useState(2);
   const [matrix, setMatrix] = useState(Array(numEquation).fill(Array(numEquation).fill(0)));
   const [vector, setVector] = useState(Array(numEquation).fill(0));
   const [result, setResult] = useState([]);
-  const [progress, setProgress] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const fileInputRef = useRef(null);
+  console.log(matrix, vector);
+
+  console.log('user', authTokens);
 
   const handleChange = (event) => {
     setNumEquation(event.target.value);
@@ -33,17 +36,14 @@ export default function Matrix() {
   };
 
   const handleCalculate = async () => {
-    setLoading(true);
     try {
-      const response = await sendDataToBackend(matrix, vector, setProgress);
-      setResult(response.data.result);
-      setOpen(true);
+      const apiService = new ApiService(authTokens);
+      let taskId = await apiService.sendData(matrix, vector);
+      console.log('Task ID:', taskId);
     } catch (err) {
-      console.error('Error sending matrix to backend:', err);
-    } finally {
-      setLoading(false);
+      console.error('Error calculating the system:', err);
     }
-  }
+  };
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -108,6 +108,23 @@ export default function Matrix() {
             ]}
             handleChange={handleChange}
           />
+          <Typography
+            sx={{
+              color:'white',
+              marginLeft:'10px',
+              marginRight:'10px',
+              fontSize: '19px'
+            }}
+          >
+            or select it manually
+          </Typography>
+          <TextField 
+            sx={{
+              width: '100px',
+            }}
+            variant="outlined"
+            onChange={(e) => setNumEquation(e.target.value)}
+          />
           <Button 
             variant="contained"
             sx={{
@@ -137,14 +154,15 @@ export default function Matrix() {
             onChange={handleFileUpload}
           />
         </Box>
-        {loading && <LinearProgress variant="determinate" value={progress} sx={{ marginTop: '20px' }} />}
-        <EquationForm
-          matrix={matrix}
-          setMatrix={setMatrix}
-          numEquation={numEquation}
-          vector={vector}
-          setVector={setVector}
-        />
+        {(numEquation >= 2 && numEquation <= 6) ? (
+          <EquationForm
+            matrix={matrix}
+            setMatrix={setMatrix}
+            numEquation={numEquation}
+            vector={vector}
+            setVector={setVector}
+          />
+        ) : null}
         <Box
           sx={{
             display: 'flex',
@@ -156,7 +174,6 @@ export default function Matrix() {
             sx={{
               marginTop: '50px',
             }}
-            disabled={loading}
             onClick={handleCalculate}
           >
             Calculate

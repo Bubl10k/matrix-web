@@ -18,29 +18,41 @@ export function AuthProvider({ children }) {
     let [loading, setLoading] = useState(true);
 
     let loginUser = async (formData) => {
-        const response = await axios.post(
-            'http://127.0.0.1:8000/auth/login/', 
-            {
-                username: formData.username,
-                password: formData.password
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json'
+        try {
+            console.log('Form data', formData.username);
+            const response = await axios.post(
+                'http://127.0.0.1:8000/auth/login/', 
+                {
+                    username: 'admin',
+                    password: 'admin'
                 },
+                {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            );
+            const data = response.data;
+            console.log(data);
+            
+            if (data) {
+                localStorage.setItem('authTokens', JSON.stringify(data));
+                setAuthTokens(data);
+                setUser(jwtDecode(data.access));
+                navigate('/matrix');
+            } else {
+                alert('Something went wrong while logging in the user!');
             }
-        )
-        const data = response.data;
-        
-        if (data) {
-            localStorage.setItem('authTokens', JSON.stringify(data));
-            setAuthTokens(data);
-            setUser(jwtDecode(data.access));
-            navigate('/matrix');
-        } else {
-            alert('Something went wrong while loggin in the user!')
+        } catch (err) {
+            if (err.response) {
+                console.error('Login failed:', err.response.data);
+                alert('Login failed: ' + JSON.stringify(err.response.data));
+            } else {
+                console.error('Login failed:', err);
+                alert('An unexpected error occurred during login.');
+            }
         }
-    }
+    };
 
     let logoutUser = (e) => {
         e.preventDefault();
@@ -81,7 +93,7 @@ export function AuthProvider({ children }) {
     }
 
     useEffect(() => {
-        const REFRESH_INTERVAL = 1000 * 60 * 29; // 29 minutes
+        const REFRESH_INTERVAL = 1000 * 60 * 4; // 4 minutes
         let interval = setInterval(() => {
             if (authTokens) {
                 updateToken();
