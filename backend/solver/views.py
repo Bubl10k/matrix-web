@@ -7,9 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from .paginations import TaskAPIPagination
+
 from .tasks import solve_linear_system
 
-from .serializers import TaskSerializer
+from .serializers import TaskDetailSerializer, TaskSerializer
 
 from .models import Task
 
@@ -18,6 +20,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+    pagination_class = TaskAPIPagination
     
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
@@ -51,14 +54,15 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(methods=['get'], detail=True)
     def result(self, request, pk=None):
         task = get_object_or_404(Task, pk=pk)
-        serializer = self.get_serializer(task)
+        serializer = TaskDetailSerializer(task)
         
         return Response(serializer.data)
     
-    @action(methods=['put'], detail=True)
+    @action(methods=['put'], detail=False)
     def cancel(self, request):
-        task = request.data.get('task_id')
-        result = AsyncResult(task)
+        task = get_object_or_404(Task,
+                                 task_id=request.data.get('task_id'))
+        result = AsyncResult(task.task_id)
         result.revoke(terminate=True)
         task.status = 'C'
         task.save()

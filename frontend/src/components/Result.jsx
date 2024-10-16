@@ -18,7 +18,7 @@ export default function Result({ result }) {
             {result.map((item, index) => {
                 return (
                     <Item key={index}>
-                        {item}
+                        x{index} = {item}
                     </Item>
                 )
             })}

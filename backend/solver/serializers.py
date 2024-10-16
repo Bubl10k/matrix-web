@@ -27,4 +27,10 @@ class TaskSerializer(serializers.ModelSerializer):
         if len(matrix) != len(matrix[0]):
             raise serializers.ValidationError({'error': 'Matrix must be square'})
         return attrs
-    
+
+
+class TaskDetailSerializer(serializers.ModelSerializer):    
+    class Meta:
+        model = Task
+        fields = '__all__'
+        

@@ -20,7 +20,7 @@ export default function Login() {
             <Grid align='center'>
                 <Typography variant="h4" sx={{marginBottom:'20px'}}>Sign In</Typography>
             </Grid>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{marginBottom:'20px'}}>
                 <TextField 
                     label='Username'
                     placeholder='Enter username'
@@ -40,6 +40,7 @@ export default function Login() {
                     fullWidth
                     required
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    sx={{marginBottom:'30px'}}
                 />
                 <FormControlLabel
                     control={
@@ -59,10 +60,9 @@ export default function Login() {
                 Sign in
                 </Button>
             </form>
-            <Typography > Do you have an account ?
-                 <Link href="#" >
-                    Sign Up 
-            </Link>
+            <Typography
+            > 
+                Do you have an account ? <Link href="#">Sign Up </Link>
             </Typography>
         </Paper>
     )

@@ -4,7 +4,6 @@ import { useContext, useRef, useState } from 'react';
 import MySelect from '../components/UI/MySelect.jsx';
 import EquationForm from '../components/EquationForm.jsx';
 import { ApiService } from '../services/api.js';
-import ResultModal from '../components/ResultModal.jsx';
 import AuthContext from '../context/AuthProvider.jsx';
 
 export default function Matrix() {
@@ -12,8 +11,6 @@ export default function Matrix() {
   const [numEquation, setNumEquation] = useState(2);
   const [matrix, setMatrix] = useState(Array(numEquation).fill(Array(numEquation).fill(0)));
   const [vector, setVector] = useState(Array(numEquation).fill(0));
-  const [result, setResult] = useState([]);
-  const [open, setOpen] = useState(false);
   const fileInputRef = useRef(null);
   console.log(matrix, vector);
 
@@ -66,9 +63,6 @@ export default function Matrix() {
     reader.readAsText(file);
   };
 
-  const handleClose = () => {
-    setOpen(false);
-  }
 
   return (
     <Container maxWidth="xl">
@@ -179,11 +173,6 @@ export default function Matrix() {
             Calculate
           </Button>
         </Box>
-        <ResultModal
-          result={result}
-          open={open}
-          handleClose={handleClose}
-        />
     </Container>
   )
 }

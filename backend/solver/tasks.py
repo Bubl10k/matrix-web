@@ -1,3 +1,4 @@
+import time
 from django.shortcuts import get_object_or_404
 from celery import shared_task
 import numpy as np
@@ -11,6 +12,8 @@ def solve_linear_system(task_id):
         task = get_object_or_404(Task, pk=task_id)
         task.status = 'P'
         task.save()
+        
+        time.sleep(5)
         
         matrix = np.array(task.matrix)
         vector = np.array(task.vector)
