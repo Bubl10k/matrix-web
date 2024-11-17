@@ -21,7 +21,7 @@ export function AuthProvider({ children }) {
         try {
             console.log('Form data', formData.username);
             const response = await axios.post(
-                'http://127.0.0.1:8000/auth/login/', 
+                'http://localhost/auth/login/', 
                 {
                     username: 'admin',
                     password: 'admin'
@@ -54,8 +54,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    let logoutUser = (e) => {
-        e.preventDefault();
+    let logoutUser = () => {
         localStorage.removeItem('authTokens');
         setAuthTokens(null);
         setUser(null);
@@ -64,7 +63,7 @@ export function AuthProvider({ children }) {
 
     const updateToken = async () => { 
         const response = await axios.post(
-            'http://127.0.0.1:8000/auth/login/refresh/',
+            'http://localhost/auth/login/refresh/',
             {
                 refresh: authTokens?.refresh
             }

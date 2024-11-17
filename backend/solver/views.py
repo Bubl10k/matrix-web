@@ -20,7 +20,10 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+<<<<<<< HEAD
     pagination_class = TaskAPIPagination
+=======
+>>>>>>> 39f99c5 (Configure nginx and small fixes)
     
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
@@ -58,8 +61,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
     
-    @action(methods=['put'], detail=False)
+    @action(methods=['put'], detail=False, url_path='cancel')
     def cancel(self, request):
+        print(request.data)
         task = get_object_or_404(Task,
                                  task_id=request.data.get('task_id'))
         result = AsyncResult(task.task_id)

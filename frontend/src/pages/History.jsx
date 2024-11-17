@@ -1,4 +1,4 @@
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Button, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from "@mui/material";
 import HistoryTasks from "../components/HistoryTasks.jsx";
 import { ApiService } from "../services/api.js";
 import { useContext, useEffect, useState } from "react";
@@ -8,6 +8,8 @@ export default function History() {
     const { authTokens } = useContext(AuthContext);
     const [tasks, setTasks] = useState([]);
     const [pendingTasks, setPendingTasks] = useState({});
+    const [openDialog, setOpenDialog] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
     const apiService = new ApiService(authTokens);
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function History() {
                         });
                     }
                 }
-            })
+            });
             if (Object.keys(pendingTasks).length === 0) return;
             fetchTasks();
         }, 1000);
@@ -77,15 +79,29 @@ export default function History() {
         }
     };
 
-    const handleDeleteTask = async (task_id) => {
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
         try {
-            await apiService.deleteTask(task_id);
+            await apiService.deleteTask(taskToDelete);
             const updatedTasks = await apiService.getTasks();
             setTasks(updatedTasks);
         } catch (error) {
             console.error('Error deleting task:', error);
+        } finally {
+            setTaskToDelete(null);
+            setOpenDialog(false);
         }
-    }
+    };
+
+    const confirmDeleteTask = (task_id) => {
+        setTaskToDelete(task_id);
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+        setTaskToDelete(null);
+    };
 
     return (
         <Container maxWidth="xl">
@@ -111,10 +127,33 @@ export default function History() {
                 <HistoryTasks
                     tasks={tasks}
                     handleCancelTask={handleCancelTask}
-                    handleDeleteTask={handleDeleteTask}
+                    handleDeleteTask={confirmDeleteTask} // Use confirmDeleteTask here
                     fetchResult={fetchResult}
                 />
             </Box>
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={openDialog}
+                onClose={handleCloseDialog}
+                aria-labelledby="delete-confirmation-dialog"
+            >
+                <DialogTitle id="delete-confirmation-dialog">
+                    Confirm Deletion
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this task? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleDeleteTask} color="error">
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
-    )
+    );
 }

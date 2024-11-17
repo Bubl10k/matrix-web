@@ -12,7 +12,7 @@ export default function Login() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        loginUser(formData); // Pass formData instead of event
+        loginUser(formData); 
     };
 
     return(

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://127.0.0.1:8000/api_solver/";
+const API_BASE_URL = "http://localhost/api_solver/";
 
 export class ApiService {
   constructor(authTokens) {
@@ -65,6 +65,7 @@ export class ApiService {
 
   async cancelTask(taskId) {
     try {
+      console.log('asd', taskId);
       const formData = new FormData();
       formData.append('task_id', taskId);
       const response = await axios.put(`${API_BASE_URL}tasks/cancel/`,

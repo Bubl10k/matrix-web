@@ -1,4 +1,5 @@
-import { Box, Button, Container, TextField, Typography } from '@mui/material'
+import { Box, Button, Container, TextField, Typography, Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
 import '../index.css';
 import { useContext, useRef, useState } from 'react';
 import MySelect from '../components/UI/MySelect.jsx';
@@ -11,10 +12,8 @@ export default function Matrix() {
   const [numEquation, setNumEquation] = useState(2);
   const [matrix, setMatrix] = useState(Array(numEquation).fill(Array(numEquation).fill(0)));
   const [vector, setVector] = useState(Array(numEquation).fill(0));
+  const [showMessage, setShowMessage] = useState(false); // State to control the Snackbar
   const fileInputRef = useRef(null);
-  console.log(matrix, vector);
-
-  console.log('user', authTokens);
 
   const handleChange = (event) => {
     setNumEquation(event.target.value);
@@ -37,6 +36,7 @@ export default function Matrix() {
       const apiService = new ApiService(authTokens);
       let taskId = await apiService.sendData(matrix, vector);
       console.log('Task ID:', taskId);
+      setShowMessage(true); // Show the message when calculation is successful
     } catch (err) {
       console.error('Error calculating the system:', err);
     }
@@ -63,116 +63,129 @@ export default function Matrix() {
     reader.readAsText(file);
   };
 
-
   return (
     <Container maxWidth="xl">
-        <Typography variant='h4' sx={{
-            color:'white',
-            textAlign:'center',
-            marginTop:'40px'
-            }}
-        >
-            It`s web application that calculate system of equations by the Gaussian method
-        </Typography>
-        <Box
+      <Typography
+        variant='h4'
+        sx={{
+          color:'white',
+          textAlign:'center',
+          marginTop:'40px'
+        }}
+      >
+        It`s web application that calculate system of equations by the Gaussian method
+      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          marginTop: '50px',
+        }}
+      >
+        <Typography
           sx={{
-            display: 'flex',
+            color:'white',
+            marginRight:'10px',
+            fontSize: '19px'
+          }}
+        >
+          Number of unknown values in the system:
+        </Typography>
+        <MySelect
+          text={'Numbers of equations'}
+          value={numEquation}
+          label={'Numbers of equations'}
+          items={[
+            {value: 2, text: '2'},
+            {value: 3, text: '3'},
+            {value: 4, text: '4'},
+            {value: 5, text: '5'},
+            {value: 6, text: '6'},
+          ]}
+          handleChange={handleChange}
+        />
+        <Typography
+          sx={{
+            color:'white',
+            marginLeft:'10px',
+            marginRight:'10px',
+            fontSize: '19px'
+          }}
+        >
+          or select it manually
+        </Typography>
+        <TextField 
+          sx={{
+            width: '100px',
+          }}
+          variant="outlined"
+          onChange={(e) => setNumEquation(e.target.value)}
+        />
+        <Button 
+          variant="contained"
+          sx={{
+            marginLeft: '50px',
+          }}
+          onClick={() => {
+            generateRandomSystem();
+          }}
+        >
+          Generate matrix
+        </Button>
+        <Button 
+          variant="contained"
+          sx={{
+            marginLeft: '50px',
+          }}
+          onClick={() => fileInputRef.current.click()}
+        >
+          Upload matrix from file
+        </Button>
+        <input
+          type='file'
+          accept='.json'
+          style={{ display: 'none' }}
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+        />
+      </Box>
+      {(numEquation >= 2 && numEquation <= 6) ? (
+        <EquationForm
+          matrix={matrix}
+          setMatrix={setMatrix}
+          numEquation={numEquation}
+          vector={vector}
+          setVector={setVector}
+        />
+      ) : null}
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <Button
+          variant="contained"
+          sx={{
             marginTop: '50px',
           }}
+          onClick={handleCalculate}
         >
-          <Typography
-            sx={{
-              color:'white',
-              marginRight:'10px',
-              fontSize: '19px'
-            }}
-          >
-            Number of unknown values in the system:
-          </Typography>
-          <MySelect
-            text={'Numbers of equations'}
-            value={numEquation}
-            label={'Numbers of equations'}
-            items={[
-              {value: 2, text: '2'},
-              {value: 3, text: '3'},
-              {value: 4, text: '4'},
-              {value: 5, text: '5'},
-              {value: 6, text: '6'},
-            ]}
-            handleChange={handleChange}
-          />
-          <Typography
-            sx={{
-              color:'white',
-              marginLeft:'10px',
-              marginRight:'10px',
-              fontSize: '19px'
-            }}
-          >
-            or select it manually
-          </Typography>
-          <TextField 
-            sx={{
-              width: '100px',
-            }}
-            variant="outlined"
-            onChange={(e) => setNumEquation(e.target.value)}
-          />
-          <Button 
-            variant="contained"
-            sx={{
-              marginLeft: '50px',
-            }}
-            onClick={() => {
-              generateRandomSystem();
-              console.log(matrix);
-            }}
-          >
-            Generate matrix
-          </Button>
-          <Button 
-            variant="contained"
-            sx={{
-              marginLeft: '50px',
-            }}
-            onClick={() => fileInputRef.current.click()}
-          >
-            Upload matrix from file
-          </Button>
-          <input
-            type='file'
-            accept='.json'
-            style={{ display: 'none' }}
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-          />
-        </Box>
-        {(numEquation >= 2 && numEquation <= 6) ? (
-          <EquationForm
-            matrix={matrix}
-            setMatrix={setMatrix}
-            numEquation={numEquation}
-            vector={vector}
-            setVector={setVector}
-          />
-        ) : null}
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-          }}
+          Calculate
+        </Button>
+      </Box>
+      <Snackbar
+        open={showMessage}
+        autoHideDuration={3000}
+        onClose={() => setShowMessage(false)}
+      >
+        <MuiAlert
+          onClose={() => setShowMessage(false)}
+          severity="success"
+          sx={{ width: '100%' }}
         >
-          <Button
-            variant="contained"
-            sx={{
-              marginTop: '50px',
-            }}
-            onClick={handleCalculate}
-          >
-            Calculate
-          </Button>
-        </Box>
+          Task added to history!
+        </MuiAlert>
+      </Snackbar>
     </Container>
-  )
+  );
 }
