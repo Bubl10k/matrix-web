@@ -20,10 +20,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-<<<<<<< HEAD
-    pagination_class = TaskAPIPagination
-=======
->>>>>>> 39f99c5 (Configure nginx and small fixes)
     
     def get_queryset(self):
         return Task.objects.filter(user=self.request.user)
@@ -73,4 +69,3 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(task)
                 
         return Response(serializer.data)
-    
